@@ -161,17 +161,22 @@ class DemoMarketplaceSeeder extends Seeder
     private function seedOrders(array $users, array $farms, array $products): void
     {
         $orders = [
-            ['demo-pending', $users['liza'], $users['maria'], $products[0], 3, null, null],
-            ['demo-delivered', $users['carlo'], $users['pedro'], $products[5], 5, Carbon::today()->subDay(), null],
-            ['demo-complete', $users['liza'], $users['ana'], $products[10], 4, Carbon::today()->subDays(3), Carbon::today()->subDays(2)],
+            ['demo-pending', $users['liza'], $users['maria'], $products[0], 3, null, null, Carbon::today()->subDays(2)],
+            ['demo-delivered', $users['carlo'], $users['pedro'], $products[5], 5, Carbon::today()->subDay(), null, Carbon::today()->subDays(4)],
+            ['demo-complete', $users['liza'], $users['ana'], $products[10], 4, Carbon::today()->subDays(3), Carbon::today()->subDays(2), Carbon::today()->subDays(6)],
+            ['demo-sales-1', $users['carlo'], $users['maria'], $products[12], 7, Carbon::today()->subMonth()->startOfMonth()->addDays(7), Carbon::today()->subMonth()->startOfMonth()->addDays(8), Carbon::today()->subMonth()->startOfMonth()->addDays(2)],
+            ['demo-sales-2', $users['liza'], $users['pedro'], $products[8], 11, Carbon::today()->subMonths(2)->startOfMonth()->addDays(8), Carbon::today()->subMonths(2)->startOfMonth()->addDays(9), Carbon::today()->subMonths(2)->startOfMonth()->addDays(3)],
+            ['demo-sales-3', $users['carlo'], $users['ana'], $products[2], 6, Carbon::today()->subMonths(3)->startOfMonth()->addDays(6), Carbon::today()->subMonths(3)->startOfMonth()->addDays(7), Carbon::today()->subMonths(3)->startOfMonth()->addDay()],
+            ['demo-sales-4', $users['liza'], $users['jose'], $products[15], 9, Carbon::today()->subMonths(4)->startOfMonth()->addDays(10), Carbon::today()->subMonths(4)->startOfMonth()->addDays(11), Carbon::today()->subMonths(4)->startOfMonth()->addDays(5)],
+            ['demo-sales-5', $users['carlo'], $users['maria'], $products[4], 12, Carbon::today()->subMonths(5)->startOfMonth()->addDays(7), Carbon::today()->subMonths(5)->startOfMonth()->addDays(8), Carbon::today()->subMonths(5)->startOfMonth()->addDays(2)],
         ];
 
-        foreach ($orders as $offset => [$key, $buyer, $seller, $product, $kilos, $delivered, $paid]) {
+        foreach ($orders as [$key, $buyer, $seller, $product, $kilos, $delivered, $paid, $ordered]) {
             $total = $product->price * $kilos;
             $transaction = Transaction::updateOrCreate(
                 ['proof_of_delivery' => $key],
                 [
-                    'ordered_on' => Carbon::today()->subDays(5 + $offset)->toDateString(),
+                    'ordered_on' => $ordered->toDateString(),
                     'seller_prospect_date_todeliver' => Carbon::today()->addDays(1)->toDateString(),
                     'date_delivered' => $delivered?->toDateString(),
                     'price_of_goods' => $total,

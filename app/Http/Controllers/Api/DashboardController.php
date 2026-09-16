@@ -32,14 +32,13 @@ class DashboardController extends Controller
         })->keyBy('key');
 
         foreach ($transactions as $transaction) {
-            $dateValue = $transaction->payed_on ?: $transaction->ordered_on;
-            if (! $dateValue) {
+            if (! $transaction->payed_on) {
                 continue;
             }
-            $key = Carbon::parse($dateValue)->format('Y-m');
+            $key = Carbon::parse($transaction->payed_on)->format('Y-m');
             if ($months->has($key)) {
                 $month = $months->get($key);
-                $month['sales'] += (float) ($transaction->price_payed ?: $transaction->price_of_goods ?: 0);
+                $month['sales'] += (float) ($transaction->price_payed ?: 0);
                 $month['orders']++;
                 $months->put($key, $month);
             }
@@ -66,7 +65,7 @@ class DashboardController extends Controller
                 'available_kg' => max(0, (float) $products->sum('prospect_harvest_in_kg') - (float) $products->sum('actual_sold_kg')),
                 'sold_kg' => (float) $products->sum('actual_sold_kg'),
                 'sales' => (float) $transactions->sum(function ($transaction) {
-                    return $transaction->price_payed ?: $transaction->price_of_goods ?: 0;
+                    return $transaction->price_payed ?: 0;
                 }),
                 'orders' => $transactions->count(),
                 'farms' => Farm::count(),

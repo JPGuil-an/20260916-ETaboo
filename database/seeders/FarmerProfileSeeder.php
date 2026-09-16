@@ -58,5 +58,24 @@ class FarmerProfileSeeder extends Seeder
                 Storage::disk('public')->put('Farms/' . $image, File::get($source));
             }
         }
+
+        foreach ([
+            ['Mila Pending Buyer', 'mila.pending@etabo.test', '09302220001', 0, 'Basac'],
+            ['Danilo Pending Seller', 'danilo.pending@etabo.test', '09302220002', 1, 'Poblacion'],
+        ] as [$name, $email, $mobile, $type, $location]) {
+            User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name,
+                    'birthday' => '1992-04-10',
+                    'address' => $location . ', Lantapan, Bukidnon',
+                    'mobile_number' => $mobile,
+                    'user_type' => $type,
+                    'password' => Hash::make('password'),
+                    'is_verified' => 0,
+                    'is_active' => 0,
+                ]
+            );
+        }
     }
 }
