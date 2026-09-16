@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axiosClient from "../../axios-client.js";
 import { useStateContext } from "../../context/ContextProvider.jsx";
 import { useNavigate, useParams } from "react-router-dom";
-import { Tabs } from "flowbite-react";
+import { Tabs } from "../../components/ui/TailwindUI.jsx";
 import { HiUserCircle } from "react-icons/hi";
 
 export default function AProductOrder() {

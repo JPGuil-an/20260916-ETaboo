@@ -12,6 +12,8 @@ use App\Models\TransactionDetail;
 use App\Http\Controllers\Controller;
 use  Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 
 class SellerBuyerController extends Controller
@@ -93,6 +95,68 @@ class SellerBuyerController extends Controller
         return response()->json("sucesss");
     }
 
+    public function checkout(Request $request)
+    {
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', 'distinct', 'exists:products,id'],
+            'items.*.kg' => ['required', 'numeric', 'min:1'],
+        ]);
+
+        $buyer = $request->user();
+
+        $orderIds = DB::transaction(function () use ($validated, $buyer) {
+            $created = [];
+
+            foreach ($validated['items'] as $item) {
+                $product = Product::query()
+                    ->with('farm')
+                    ->lockForUpdate()
+                    ->findOrFail($item['product_id']);
+
+                $requested = (float) $item['kg'];
+                $available = max(0, (float) $product->prospect_harvest_in_kg - (float) $product->actual_sold_kg);
+
+                if ((int) $product->is_approved !== 1 || $available < $requested) {
+                    throw ValidationException::withMessages([
+                        'items' => $available <= 0
+                            ? "{$product->product_name} is already sold out."
+                            : "Only {$available} kg of {$product->product_name} is still available.",
+                    ]);
+                }
+
+                $total = (float) $product->price * $requested;
+                $transaction = Transaction::create([
+                    'seller' => $product->farm->farm_owner,
+                    'ordered_on' => now()->toDateString(),
+                    'price_of_goods' => $total,
+                    'buyers_name' => $buyer->id,
+                ]);
+
+                TransactionDetail::create([
+                    'product_id' => $product->id,
+                    'product_name' => $product->product_name,
+                    'variety' => $product->variety,
+                    'planted_date' => $product->planted_date,
+                    'harvested_date' => $product->harvested_date,
+                    'kg_purchased' => $requested,
+                    'price_per_kilo' => $product->price,
+                    'transaction_id' => $transaction->id,
+                ]);
+
+                $product->increment('actual_sold_kg', $requested);
+                $created[] = $transaction->id;
+            }
+
+            return $created;
+        });
+
+        return response()->json([
+            'message' => 'Checkout completed successfully.',
+            'order_ids' => $orderIds,
+        ], 201);
+    }
+
     public function getOrders(Request $request)
     {
         $user_ID = Crypt::decryptString($request->user_ID);
@@ -134,7 +198,7 @@ class SellerBuyerController extends Controller
             ->whereHas('transactions')
             ->with(['transactions' => function ($query) {
                 $query->orderBy('seller_prospect_date_todeliver', 'desc');
-            }, 'transactions.TransactionDetail', 'transactions.TransactionDetail.productOrdered' ])
+            }, 'transactions.TransactionDetail', 'transactions.TransactionDetail.productOrdered.farm.user' ])
             ->get();
 
 

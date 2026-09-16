@@ -1,4 +1,4 @@
-import { Textarea } from "flowbite-react";
+import { Textarea } from "../../components/ui/TailwindUI.jsx";
 
 import { useState, useEffect } from "react";
 import axiosClient from "../../axios-client.js";

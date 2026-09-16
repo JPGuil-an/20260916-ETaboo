@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axiosClient from "../axios-client.js";
 import { Link } from "react-router-dom";
 import { useStateContext } from "../context/ContextProvider.jsx";
-import { Pagination, Button, Spinner, Alert } from "flowbite-react";
+import { Pagination, Button, Spinner, Alert } from "../components/ui/TailwindUI.jsx";
 import { HiInformationCircle } from "react-icons/hi";
 
 export default function Products() {

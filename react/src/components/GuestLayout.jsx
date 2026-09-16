@@ -1,11 +1,12 @@
 import {Navigate, Outlet} from "react-router-dom";
 import { useStateContext } from "../context/ContextProvider";
+import { homePath } from "../auth/roles.js";
 
 export default function GuestLayout() {
-  const { user, token } = useStateContext();
+  const { token, userType, portal } = useStateContext();
 
   if (token) {
-    return <Navigate to="/" />;
+    return <Navigate to={homePath(userType, portal)} replace />;
   }
 
   return (

@@ -10,7 +10,7 @@ import {
   Spinner,
   Tabs,
   Badge,
-} from "flowbite-react";
+} from "../../components/ui/TailwindUI.jsx";
 import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
 import { MdDashboard } from "react-icons/md";
 

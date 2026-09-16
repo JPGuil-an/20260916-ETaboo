@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axiosClient from "../axios-client.js";
 import { Link } from "react-router-dom";
 import { useStateContext } from "../context/ContextProvider.jsx";
-import { Table, Pagination } from "flowbite-react";
+import { Table, Pagination } from "../components/ui/TailwindUI.jsx";
 
 export default function Products() {
 

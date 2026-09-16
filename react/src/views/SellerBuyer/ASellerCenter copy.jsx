@@ -4,7 +4,7 @@ import { useStateContext } from "../../context/ContextProvider";
 // import { useHistory  } from "react-router-dom";
 
 import Swal from "sweetalert2";
-import { Tabs } from "flowbite-react";
+import { Tabs } from "../../components/ui/TailwindUI.jsx";
 import { HiUserCircle } from "react-icons/hi";
 
 export default function ASellerCenter() {

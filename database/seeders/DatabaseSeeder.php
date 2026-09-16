@@ -14,20 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-
-        \App\Models\SupportedBarangay::factory(12)->create();
-
-        \App\Models\SupportedProduct::factory(4)->create();
-
-        \App\Models\User::factory(2)->create();
-
-        \App\Models\Farm::factory(1)->create();
-
-        \App\Models\Product::factory(5)->create();
-
-        \App\Models\Transaction::factory(1)->create();
-
-        \App\Models\TransactionDetail::factory(2)->create();
-
+        $this->call(DemoMarketplaceSeeder::class);
+        $this->call(FarmerProfileSeeder::class);
     }
 }

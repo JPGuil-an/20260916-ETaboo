@@ -28,6 +28,7 @@ class LoginRequest extends FormRequest
             'password' => [
                 'required',
             ],
+            'portal' => 'required|in:buyer,seller,admin',
             'remember' => 'boolean'
         ];
     }

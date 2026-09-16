@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axiosClient from "../../axios-client";
 import { useStateContext } from "../../context/ContextProvider";
-import { Modal } from "flowbite-react";
+import { Modal } from "../../components/ui/TailwindUI.jsx";
 export default function OrdersLists() {
   const { currentUserID } = useStateContext();
   const payload = {

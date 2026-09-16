@@ -192,9 +192,26 @@ class SuperAdminController extends Controller
     }
 
 
-    public function getFarmers()
+    public function getFarmers(Request $request)
     {
-        $farmers = Farm::with('user')->get();
+        $query = Farm::with(['user', 'products']);
+
+        if ($request->filled('location') && strtolower($request->location) !== 'all') {
+            $query->where('farm_location', 'like', trim($request->location) . '%');
+        }
+
+        if ($request->filled('search')) {
+            $term = '%' . trim($request->search) . '%';
+            $query->where(function ($builder) use ($term) {
+                $builder->where('farm_name', 'like', $term)
+                    ->orWhere('farm_location', 'like', $term)
+                    ->orWhereHas('user', function ($userQuery) use ($term) {
+                        $userQuery->where('name', 'like', $term);
+                    });
+            });
+        }
+
+        $farmers = $query->orderBy('farm_location')->orderBy('farm_name')->get();
 
         return response()->json($farmers);
     }

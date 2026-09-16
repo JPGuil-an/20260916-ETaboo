@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axiosClient from "../../axios-client.js";
 import { useStateContext } from "../../context/ContextProvider.jsx";
 import { useNavigate, useParams } from "react-router-dom";
-import { Textarea, Table } from "flowbite-react";
+import { Textarea, Table } from "../../components/ui/TailwindUI.jsx";
 
 export default function FarmViewProducts() {
   const [loading, setLoading] = useState(false);

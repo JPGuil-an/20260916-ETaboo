@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //ALL ABOUT USERS
     // Route::apiResource('/users', UserController::class);
     Route::get('/usercount', [DashboardController::class, 'usercount']);
+    Route::get('/admin/dashboard/insights', [DashboardController::class, 'insights']);
     Route::get('/allUsers/pending', [UserController::class, 'allUsersPending']);
     Route::get('/allUsers/allUsers', [UserController::class, 'allUsers']);
     Route::post('/users', [UserController::class, 'store']);
@@ -64,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/farmWithProducts', [SellerBuyerController::class, 'farmWProducts']);
     Route::get('/getProductToOrder/{product}', [SellerBuyerController::class, 'getProductToOrder']);
     Route::post('/orderNow',[SellerBuyerController::class, 'orderNow']);
+    Route::post('/checkout',[SellerBuyerController::class, 'checkout']);
     Route::post('getOrders', [SellerBuyerController::class, 'getOrders']);   //ORDERS
     Route::get('getOrder/{order}', [SellerBuyerController::class, 'getFulfilledOrder']);
     Route::put('conFirmOrderBuyer/{order}', [SellerBuyerController::class, 'conFirmOrderBuyer']);

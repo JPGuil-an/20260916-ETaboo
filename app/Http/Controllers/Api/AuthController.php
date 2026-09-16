@@ -49,40 +49,56 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        if ($credentials = $request->validated()) {
+        $payload = $request->validated();
+        $portal = $payload['portal'];
+        $credentials = [
+            'mobile_number' => $payload['mobile_number'],
+            'password' => $payload['password'],
+        ];
 
-            if (!Auth::attempt($credentials)) {
-                return response([
-                    'message' => 'Provided mobile number or password is incorrect'
-                ], 422);
-            }
-
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-            if ($user->is_verified === 0) {
-                return response([
-                    'message' => 'Please Wait for your Account to be Activated'
-                ], 422);
-            } else {
-
-                $user->update([
-                    'is_active' => 1,
-                ]);
-                $userID = $user->id;
-                $token = $user->createToken('main')->plainTextToken;
-                return response()->json([
-                    // 'user' => $user,
-                    'token' => $token,
-                    'userType' => $user->user_type,
-                    'userName' => $user->name,
-                    'encryptedCurrentUserID' => Crypt::encryptString($userID),
-                ]);
-            }
-        } else {
+        if (!Auth::attempt($credentials)) {
             return response([
-                'message' => 'Please Check the mobile number or password'
+                'message' => 'Provided mobile number or password is incorrect'
             ], 422);
         }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ((int) $user->is_verified === 0) {
+            Auth::logout();
+            return response([
+                'message' => 'Please Wait for your Account to be Activated'
+            ], 422);
+        }
+
+        $type = (int) $user->user_type;
+        $allowed = match ($portal) {
+            'admin' => $type === 3,
+            'seller' => in_array($type, [1, 2], true),
+            'buyer' => in_array($type, [0, 2], true),
+            default => false,
+        };
+
+        if (!$allowed) {
+            $user->tokens()->delete();
+            Auth::logout();
+            return response([
+                'message' => 'This account is not allowed to use the selected portal. Sign in with the workspace that matches your user privilege.'
+            ], 403);
+        }
+
+        $user->update([
+            'is_active' => 1,
+        ]);
+        $userID = $user->id;
+        $token = $user->createToken('main')->plainTextToken;
+        return response()->json([
+            'token' => $token,
+            'userType' => $user->user_type,
+            'userName' => $user->name,
+            'portal' => $portal,
+            'encryptedCurrentUserID' => Crypt::encryptString($userID),
+        ]);
     }
 
     public function logout(Request $request)

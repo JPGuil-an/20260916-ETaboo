@@ -3,7 +3,7 @@ import { Link, Navigate, Outlet, Routes, Route } from "react-router-dom";
 import axiosClient from "../axios-client.js";
 import { useStateContext } from "../context/ContextProvider";
 
-import { Button, Navbar } from "flowbite-react";
+import { Button, Navbar } from "./ui/TailwindUI.jsx";
 
 const NavBar = () => {
   const { token, setUser, setToken, setProduct} = useStateContext();
@@ -108,11 +108,11 @@ const NavBar = () => {
 
 <div className="bg-slate-100 min-w-screen">
 <Navbar fluid rounded className="bg-slate-200">
-  <Navbar.Brand href="https://flowbite-react.com">
+  <Navbar.Brand href="/">
     <img
-      alt="Flowbite React Logo"
+      alt="e-Tabo logo"
       className="mr-3 h-6 sm:h-9"
-      src="https://flowbite.com/images/technologies/tailwind.svg"
+      src="/logo.jpg"
     />
     <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
       E-tabo
@@ -215,11 +215,11 @@ export default NavBar;
 </div> */}
 {/* <div className="bg-slate-100 min-w-screen">
 <Navbar fluid rounded className="bg-slate-200">
-  <Navbar.Brand href="https://flowbite-react.com">
+<Navbar.Brand href="/">
     <img
-      alt="Flowbite React Logo"
+      alt="e-Tabo logo"
       className="mr-3 h-6 sm:h-9"
-      src="https://flowbite.com/images/technologies/tailwind.svg"
+      src="/logo.jpg"
     />
     <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
       E-tabo

@@ -4,7 +4,7 @@ import { useStateContext } from "../../context/ContextProvider";
 // import { useHistory  } from "react-router-dom";
 
 import Swal from "sweetalert2";
-import { Tabs } from "flowbite-react";
+import { Tabs } from "../../components/ui/TailwindUI.jsx";
 import { HiUserCircle } from "react-icons/hi";
 
 export default function ASellerCenter() {
@@ -809,7 +809,7 @@ export default function ASellerCenter() {
                               <div className="flex flex-col justify-center px-4 py-6 md:p-6 xl:p-8 w-full bg-gray-50 space-y-6">
                                 <h3 className="text-xl font-semibold leading-5 text-gray-800">
                                   Order Status :{" "}
-                                  <span className="text-sm border-y-orange-400">
+                                  <span className="text-sm border-y-emerald-400">
                                     {" "}
                                     PENDING{" "}
                                   </span>
@@ -839,7 +839,7 @@ export default function ASellerCenter() {
                               <div className="flex flex-col justify-center px-4 py-6 md:p-6 xl:p-8 w-full bg-gray-50 space-y-6">
                                 <h3 className="text-xl font-semibold leading-5 text-gray-800">
                                   Customer : <br />
-                                  <span className="text-sm border-y-orange-400">
+                                  <span className="text-sm border-y-emerald-400">
                                     {" "}
                                     {order.user.name} <br />
                                     {order.user.mobile_number}
@@ -989,7 +989,7 @@ export default function ASellerCenter() {
                               <div className="flex flex-col justify-center px-4 py-6 md:p-6 xl:p-8 w-full bg-gray-50 space-y-6">
                                 <h3 className="text-xl font-semibold leading-5 text-gray-800">
                                   Order Status : <br />
-                                  <span className="text-sm border-y-orange-400">
+                                  <span className="text-sm border-y-emerald-400">
                                     {" "}
                                     DELIVERED {order.payed_on}
                                   </span>
@@ -1027,7 +1027,7 @@ export default function ASellerCenter() {
                               <div className="flex flex-col justify-center px-4 py-6 md:p-6 xl:p-8 w-full bg-gray-50 space-y-6">
                                 <h3 className="text-xl font-semibold leading-5 text-gray-800">
                                   Delivered to : <br />
-                                  <span className="text-sm border-y-orange-400">
+                                  <span className="text-sm border-y-emerald-400">
                                     {" "}
                                     {order.user.name} <br />
                                     {order.user.mobile_number}

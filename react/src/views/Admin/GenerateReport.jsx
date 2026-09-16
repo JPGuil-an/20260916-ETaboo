@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axiosClient from "../../axios-client";
 import { useStateContext } from "../../context/ContextProvider";
 
-import { Tabs } from "flowbite-react";
+import { Tabs } from "../../components/ui/TailwindUI.jsx";
 import { HiUserCircle } from "react-icons/hi";
 
 import { useReactToPrint} from "react-to-print";

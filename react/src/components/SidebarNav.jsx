@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sidebar } from "flowbite-react";
+import { Sidebar } from "./ui/TailwindUI.jsx";
 import {
   HiArrowSmRight,
   HiChartPie,
@@ -225,7 +225,7 @@ const SidebarNav = () => {
               </button>
             </div>
             <p class="mb-3 text-sm text-blue-800 dark:text-blue-400">
-              Preview the new Flowbite dashboard navigation! You can turn the
+              Preview the refreshed Tailwind dashboard navigation! You can turn the
               new navigation off for a limited time in your profile.
             </p>
             <a

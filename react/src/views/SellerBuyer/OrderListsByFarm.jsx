@@ -3,7 +3,7 @@ import axiosClient from "../../axios-client.js";
 import { Link } from "react-router-dom";
 import { useStateContext } from "../../context/ContextProvider.jsx";
 
-import { Table, Spinner, Tabs } from "flowbite-react";
+import { Table, Spinner, Tabs } from "../../components/ui/TailwindUI.jsx";
 import { HiUserCircle } from "react-icons/hi";
 
 export default function OrderByFarm() {

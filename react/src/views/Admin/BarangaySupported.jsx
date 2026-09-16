@@ -11,7 +11,7 @@ import {
   Modal,
   Label,
   TextInput,
-} from "flowbite-react";
+} from "../../components/ui/TailwindUI.jsx";
 import { HiPlusSm } from "react-icons/hi";
 
 export default function BarangaySupported() {

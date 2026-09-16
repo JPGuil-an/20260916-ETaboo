@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axiosClient from "../axios-client.js";
 import { Link } from "react-router-dom";
 import { useStateContext } from "../context/ContextProvider.jsx";
-import { Pagination, } from "flowbite-react";
+import { Pagination } from "../components/ui/TailwindUI.jsx";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationDot, faCartShopping } from "@fortawesome/free-solid-svg-icons";

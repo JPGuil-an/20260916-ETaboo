@@ -3,7 +3,7 @@
     <head>
         <?php
         // Redirect to a certain address
-        header("Location: http://127.0.0.1:3000");
+        header("Location: http://localhost:3000/");
         exit; // Ensure no further code is executed after the redirect
         ?>
     </head>

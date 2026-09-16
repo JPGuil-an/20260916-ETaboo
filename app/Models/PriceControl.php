@@ -15,4 +15,7 @@ class PriceControl extends Model
     'max',
 ];
 
+
+
+
 }

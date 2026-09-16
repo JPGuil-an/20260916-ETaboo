@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Transaction;
+use App\Models\Farm;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\SupportedBarangay;
 use App\Http\Controllers\Controller;
@@ -14,6 +16,67 @@ use App\Http\Requests\SuperAdmin\StoreBarangayRequest;
 
 class DashboardController extends Controller
 {
+    public function insights()
+    {
+        $products = Product::where('is_approved', 1)->get();
+        $transactions = Transaction::with('transactionDetail')->get();
+
+        $months = collect(range(5, 0))->map(function ($offset) {
+            $date = Carbon::now()->subMonths($offset);
+            return [
+                'key' => $date->format('Y-m'),
+                'label' => $date->format('M'),
+                'sales' => 0,
+                'orders' => 0,
+            ];
+        })->keyBy('key');
+
+        foreach ($transactions as $transaction) {
+            $dateValue = $transaction->payed_on ?: $transaction->ordered_on;
+            if (! $dateValue) {
+                continue;
+            }
+            $key = Carbon::parse($dateValue)->format('Y-m');
+            if ($months->has($key)) {
+                $month = $months->get($key);
+                $month['sales'] += (float) ($transaction->price_payed ?: $transaction->price_of_goods ?: 0);
+                $month['orders']++;
+                $months->put($key, $month);
+            }
+        }
+
+        $categories = $products->groupBy('product_type')->map(function ($items, $name) {
+            return [
+                'name' => $name,
+                'listings' => $items->count(),
+                'available_kg' => max(0, (float) $items->sum('prospect_harvest_in_kg') - (float) $items->sum('actual_sold_kg')),
+                'sold_kg' => (float) $items->sum('actual_sold_kg'),
+            ];
+        })->values();
+
+        $locations = Farm::all()->groupBy(function ($farm) {
+            return trim(explode(',', $farm->farm_location)[0]);
+        })->map(function ($items, $name) {
+            return ['name' => $name, 'farms' => $items->count()];
+        })->sortByDesc('farms')->values();
+
+        return response()->json([
+            'summary' => [
+                'active_listings' => $products->count(),
+                'available_kg' => max(0, (float) $products->sum('prospect_harvest_in_kg') - (float) $products->sum('actual_sold_kg')),
+                'sold_kg' => (float) $products->sum('actual_sold_kg'),
+                'sales' => (float) $transactions->sum(function ($transaction) {
+                    return $transaction->price_payed ?: $transaction->price_of_goods ?: 0;
+                }),
+                'orders' => $transactions->count(),
+                'farms' => Farm::count(),
+            ],
+            'sales_trend' => $months->values(),
+            'categories' => $categories,
+            'locations' => $locations,
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      *

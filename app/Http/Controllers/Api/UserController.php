@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -31,10 +32,37 @@ class UserController extends Controller
         return UserResource::collection($user);
     }
 
-    public function allUsers()
+    public function allUsers(Request $request)
     {
-        $user = User::where('user_type', '!=', 2)->orderByDesc('updated_at')->paginate(10);
-        return UserResource::collection($user);
+        $query = User::query()->where('user_type', '!=', 3);
+
+        if ($request->filled('status')) {
+            match ($request->string('status')->toString()) {
+                'verified' => $query->where('is_verified', 1),
+                'pending' => $query->where('is_verified', 0),
+                'active' => $query->where('is_active', 1),
+                'inactive' => $query->where(function ($builder) {
+                    $builder->where('is_active', 0)->orWhereNull('is_active');
+                }),
+                default => null,
+            };
+        }
+
+        if ($request->filled('role') && in_array((int) $request->role, [0, 1, 2], true)) {
+            $query->where('user_type', (int) $request->role);
+        }
+
+        if ($request->filled('search')) {
+            $term = '%' . trim($request->search) . '%';
+            $query->where(function ($builder) use ($term) {
+                $builder->where('name', 'like', $term)
+                    ->orWhere('mobile_number', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('address', 'like', $term);
+            });
+        }
+
+        return UserResource::collection($query->orderByDesc('updated_at')->paginate(12)->withQueryString());
     }
 
 
