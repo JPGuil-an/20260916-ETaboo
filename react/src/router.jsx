@@ -1,4 +1,4 @@
-import {createBrowserRouter} from "react-router-dom";
+import {createBrowserRouter, Navigate} from "react-router-dom";
 
 import GuestLayout from "./components/GuestLayout";
 import RootRedirect from "./components/RootRedirect.jsx";
@@ -26,7 +26,6 @@ import ProductsApproved from "./views/Admin/ProductsApproved.jsx";
 
 import BarangaySupported from "./views/Admin/BarangaySupported.jsx";
 import ProductsSupported from "./views/Admin/ProductsSupported.jsx";
-import BarangayUpdate from "./views/Admin/BarangayUpdate.jsx";
 
 import SellerBuyerDashboard from "./views/SellerBuyer/ABuyerSellerDashboard"
 import ProductAdd from "./views/SellerBuyer/ProductAdd.jsx";
@@ -139,7 +138,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'barangays/:id',
-        element: <BarangayUpdate />
+        element: <Navigate to="/admin/supported/barangay" replace />
       },
       {
         path: 'admin/supported/products',

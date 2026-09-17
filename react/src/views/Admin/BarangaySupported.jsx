@@ -1,218 +1,136 @@
-import { useEffect, useState, createRef } from "react";
+import { useEffect, useState } from "react";
+import { HiOutlineLocationMarker, HiOutlinePencil, HiOutlinePlus, HiOutlineSearch, HiOutlineX } from "react-icons/hi";
 import axiosClient from "../../axios-client.js";
-import { Link } from "react-router-dom";
 import { useStateContext } from "../../context/ContextProvider.jsx";
+import { getBarangayRowNumber, normalizeBarangayName, validateBarangayName } from "./barangayDirectory.js";
 
-import {
-  Table,
-  Button,
-  Pagination,
-  Spinner,
-  Modal,
-  Label,
-  TextInput,
-} from "../../components/ui/TailwindUI.jsx";
-import { HiPlusSm } from "react-icons/hi";
+const formatDate = (value) => value
+  ? new Intl.DateTimeFormat("en-PH", { year: "numeric", month: "short", day: "numeric" }).format(new Date(value))
+  : "Not available";
 
 export default function BarangaySupported() {
-  const [barangays, setBarangays] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const { setNotification } = useStateContext();
-  const [message, setMessage] = useState(null);
+  const [barangays, setBarangays] = useState([]);
+  const [meta, setMeta] = useState({ current_page: 1, last_page: 1, per_page: 8, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [modal, setModal] = useState(null);
+  const [name, setName] = useState("");
+  const [formError, setFormError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-
-  const barangayRef = createRef();
-
-  useEffect(() => {
-    axiosClient.get("/supportedBarangay").then(({ data }) => {
-      setBarangay(data);
-    });
-  }, []);
-  useEffect(() => {
-    getBarangays();
-  }, [currentPage]);
-
-  // const onDeleteClick = (user) => {
-  //   if (!window.confirm("Are you sure you want to delete this user?")) {
-  //     return;
-  //   }
-  //   axiosClient.delete(`/supportedBarangay/${user.id}`).then(() => {
-  //     setNotification("User was successfully deleted");
-  //     getUsers();
-  //   });
-  // };
-
-  const getBarangays = () => {
+  const loadBarangays = async (page = currentPage, query = search) => {
     setLoading(true);
-    axiosClient
-      .get(`/supportedBarangay?page=${currentPage}`)
-      .then(({ data }) => {
-        setLoading(false);
-        setBarangays(data.data);
-        setTotalPages(data.meta.last_page);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+    setLoadError("");
+    try {
+      const { data } = await axiosClient.get("/supportedBarangay", { params: { page, search: query.trim() || undefined } });
+      setBarangays(data.data || []);
+      setMeta(data.meta || { current_page: page, last_page: 1, per_page: 8, total: 0 });
+    } catch {
+      setLoadError("Barangays could not be loaded. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const goToPage = (page) => {
-    setCurrentPage(page);
-  };
+  useEffect(() => {
+    const timer = window.setTimeout(() => loadBarangays(currentPage, search), 250);
+    return () => window.clearTimeout(timer);
+  }, [currentPage, search]);
 
-  //MODAL
-  const [openModal, setOpenModal] = useState();
-  const props = { openModal, setOpenModal };
-  const count = 0;
+  const openAdd = () => { setModal({ mode: "add" }); setName(""); setFormError(""); };
+  const openEdit = (barangay) => { setModal({ mode: "edit", barangay }); setName(barangay.supported_barangay); setFormError(""); };
+  const closeModal = () => { if (!saving) { setModal(null); setFormError(""); } };
 
-  const onBarangaySubmit = (event) => {
+  const submitBarangay = async (event) => {
     event.preventDefault();
+    const normalizedName = normalizeBarangayName(name);
+    const validationMessage = validateBarangayName(normalizedName);
+    if (validationMessage) return setFormError(validationMessage);
 
-    const payload = {
-      supported_barangay: barangayRef.current.value,
-    };
-    axiosClient
-      .post("/addBarangay", payload)
-      .then(() => {
+    setSaving(true);
+    setFormError("");
+    try {
+      if (modal.mode === "edit") {
+        await axiosClient.put(`/barangays/${modal.barangay.id}`, { supported_barangay: normalizedName });
+        setNotification("Barangay updated successfully");
+      } else {
+        await axiosClient.post("/addBarangay", { supported_barangay: normalizedName });
         setNotification("Barangay added successfully");
-        getBarangays();
-        setOpenModal(false);
-        barangayRef.current.value = "";
-      })
-      .catch((err) => {
-        const response = err.response;
-        if (response && response.status === 422) {
-          // setOpenModal(true);
-          setMessage(response.data.errors);
-        }
-      });
+        setCurrentPage(1);
+      }
+      setModal(null);
+      await loadBarangays(modal.mode === "add" ? 1 : currentPage, search);
+    } catch (error) {
+      const errors = error.response?.data?.errors;
+      setFormError(errors ? Object.values(errors).flat()[0] : "The barangay could not be saved. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const changeSearch = (event) => { setSearch(event.target.value); setCurrentPage(1); };
 
   return (
-    <div class="pl-12 pr-12 pt-6">
-      <div class="grid grid-cols-2 gap-4 mt-4 mb-6">
-        <div>
-          <h1>These Barangays will be used in the form upon Registration</h1>
-          {/* <Link className="btn-add" to="/users/new">
-          Add new
-        </Link> */}
+    <main className="barangay-directory">
+      <header className="barangay-hero">
+        <div><span>Registration coverage</span><h1>Supported Barangays</h1><p>Manage the locations available to farmers and buyers during registration.</p></div>
+        <div className="barangay-hero-stat"><HiOutlineLocationMarker aria-hidden="true" /><div><strong>{meta.total}</strong><small>{search ? "matching locations" : "active locations"}</small></div></div>
+      </header>
+
+      <section className="barangay-panel">
+        <div className="barangay-toolbar">
+          <div><small>Location directory</small><h2>Registration service areas</h2></div>
+          <button type="button" className="barangay-add" onClick={openAdd}><HiOutlinePlus aria-hidden="true" /> Add barangay</button>
+        </div>
+        <div className="barangay-search">
+          <HiOutlineSearch aria-hidden="true" />
+          <input value={search} onChange={changeSearch} placeholder="Search barangays…" aria-label="Search barangays" />
+          {search && <button type="button" onClick={() => { setSearch(""); setCurrentPage(1); }} aria-label="Clear search"><HiOutlineX /></button>}
         </div>
 
-        <div class="flex justify-end">
-          <Button
-            className="bg-green-500 hover:bg-green-600"
-            onClick={() => props.setOpenModal("form-elements")}
-          >
-            <HiPlusSm className="ml-2 h-5 w-5" />
-            <p>Add Barangay</p>
-          </Button>
-        </div>
-      </div>
-      <div>
-        <div className="card animated fadeInDown">
-          <Table className="table-auto">
-            <Table.Head>
-              <Table.HeadCell>Barangay Order #</Table.HeadCell>
-              <Table.HeadCell>Barangay Name</Table.HeadCell>
-              <Table.HeadCell>Added At</Table.HeadCell>
-              <Table.HeadCell>Actions</Table.HeadCell>
-            </Table.Head>
-            {loading && (
-              <tbody>
-                <tr>
-                  <td colSpan="6" class="text-center">
-                    <Spinner aria-label="Large spinner example" size="lg" />
-                  </td>
-                </tr>
-              </tbody>
-            )}
+        {loadError && <div className="barangay-alert" role="alert">{loadError}<button type="button" onClick={() => loadBarangays()}>Retry</button></div>}
+        {loading && <div className="barangay-loading" aria-live="polite"><span />Loading locations…</div>}
 
-            {!loading && (
-              <Table.Body className="divide-y">
-                {barangays.map((u, index) => (
-                  <Table.Row
-                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                    key={u.id}
-                  >
-                    <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {count + index + 1}
-                    </Table.Cell>
-                    <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {u.supported_barangay}
-                    </Table.Cell>
-                    <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                      {u.created_at}
-                    </Table.Cell>
-                    <Table.Cell>
-                    <Button color="warning"><Link
-
-                        to={"/barangays/" + u.id}
-                      >
-                        Edit
-                      </Link></Button>
-
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            )}
-          </Table>
-
-          {/* {notification && <div className="notification">{notification}</div>} */}
-
-          <div className="flex items-center justify-center text-center mt-3">
-            <Pagination
-              currentPage={currentPage}
-              onPageChange={(page) => {
-                setCurrentPage(page);
-              }}
-              showIcons
-              totalPages={totalPages}
-            />
+        {!loading && !loadError && barangays.length > 0 && <>
+          <div className="barangay-table-wrap">
+            <table className="barangay-table">
+              <thead><tr><th>#</th><th>Barangay</th><th>Date added</th><th><span className="sr-only">Actions</span></th></tr></thead>
+              <tbody>{barangays.map((barangay, index) => <tr key={barangay.id}>
+                <td>{getBarangayRowNumber(index, meta.current_page, meta.per_page)}</td>
+                <td><span className="barangay-pin"><HiOutlineLocationMarker /></span><strong>{barangay.supported_barangay}</strong></td>
+                <td>{formatDate(barangay.created_at)}</td>
+                <td><button type="button" onClick={() => openEdit(barangay)}><HiOutlinePencil /> Edit</button></td>
+              </tr>)}</tbody>
+            </table>
           </div>
-        </div>
-      </div>
 
-      <Modal
-        show={props.openModal === "form-elements"}
-        size="md"
-        popup
-        onClose={() => props.setOpenModal(undefined)}
-      >
-        <Modal.Header />
-        <Modal.Body>
-          <form onSubmit={onBarangaySubmit}>
-            <div className="space-y-6">
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-                Add Barangay
-              </h3>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="barangay" value="Barangay Name to Add" />
-                </div>
+          <div className="barangay-cards">{barangays.map((barangay, index) => <article key={barangay.id}>
+            <div className="barangay-card-number">{getBarangayRowNumber(index, meta.current_page, meta.per_page)}</div>
+            <span className="barangay-pin"><HiOutlineLocationMarker /></span>
+            <div><strong>{barangay.supported_barangay}</strong><small>Added {formatDate(barangay.created_at)}</small></div>
+            <button type="button" onClick={() => openEdit(barangay)} aria-label={`Edit ${barangay.supported_barangay}`}><HiOutlinePencil /></button>
+          </article>)}</div>
 
-                <TextInput
-                  ref={barangayRef}
-                  id="barangay"
-                  placeholder="Complete Barangay Name"
-                  required
-                />
-              </div>
+          <footer className="barangay-pagination">
+            <p>Showing {(meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)} of {meta.total}</p>
+            <div><button type="button" disabled={meta.current_page <= 1} onClick={() => setCurrentPage((page) => page - 1)}>Previous</button><span>Page {meta.current_page} of {meta.last_page}</span><button type="button" disabled={meta.current_page >= meta.last_page} onClick={() => setCurrentPage((page) => page + 1)}>Next</button></div>
+          </footer>
+        </>}
 
-              <div className="w-full">
-                <Button
-                  type="submit"
-                  className="w-full bg-green-500 hover:bg-green-600"
-                >
-                  Submit
-                </Button>
-              </div>
-            </div>
-          </form>
-        </Modal.Body>
-      </Modal>
-    </div>
+        {!loading && !loadError && barangays.length === 0 && <div className="barangay-empty"><HiOutlineLocationMarker /><h3>{search ? "No matching barangays" : "No barangays yet"}</h3><p>{search ? "Try a different search term." : "Add the first supported registration location."}</p>{!search && <button type="button" onClick={openAdd}>Add barangay</button>}</div>}
+      </section>
+
+      {modal && <div className="barangay-modal-layer" role="dialog" aria-modal="true" aria-labelledby="barangay-modal-title">
+        <button className="barangay-modal-backdrop" type="button" onClick={closeModal} aria-label="Close dialog" />
+        <form className="barangay-modal" onSubmit={submitBarangay}>
+          <header><div className="barangay-pin"><HiOutlineLocationMarker /></div><div><small>{modal.mode === "edit" ? "Update location" : "New location"}</small><h2 id="barangay-modal-title">{modal.mode === "edit" ? "Edit barangay" : "Add supported barangay"}</h2></div><button type="button" onClick={closeModal} aria-label="Close"><HiOutlineX /></button></header>
+          <div className="barangay-modal-body"><label htmlFor="barangay-name">Barangay name</label><input id="barangay-name" value={name} onChange={(event) => { setName(event.target.value); setFormError(""); }} placeholder="e.g. Capitan Juan" autoFocus maxLength={25} /><div className="barangay-field-meta"><span>Use the official barangay name</span><span>{normalizeBarangayName(name).length}/25</span></div>{formError && <p role="alert">{formError}</p>}</div>
+          <footer><button type="button" onClick={closeModal} disabled={saving}>Cancel</button><button type="submit" disabled={saving}>{saving ? "Saving…" : modal.mode === "edit" ? "Save changes" : "Add barangay"}</button></footer>
+        </form>
+      </div>}
+    </main>
   );
 }

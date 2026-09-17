@@ -27,9 +27,19 @@ use App\Models\Transaction;
 class SuperAdminController extends Controller
 {
 
-    public function supportedBarangay()
+    public function supportedBarangay(Request $request)
     {
-        $supportedBarangay = SupportedBarangay::query()->orderBy('supported_barangay', 'asc')->paginate(8);
+        $query = SupportedBarangay::query();
+
+        if ($request->filled('search')) {
+            $query->where('supported_barangay', 'like', '%' . trim($request->search) . '%');
+        }
+
+        $supportedBarangay = $query
+            ->orderBy('supported_barangay', 'asc')
+            ->paginate(8)
+            ->withQueryString();
+
         return SupportedBarangayResource::collection($supportedBarangay);
     }
 
