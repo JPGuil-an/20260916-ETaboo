@@ -387,8 +387,10 @@ class SellerBuyerController extends Controller
 
         $validatedData = $request->validate([
             'product_type' => 'required|string',
-            'min' => 'required|numeric',
-            'max' => 'required|numeric',
+            'min' => 'required|numeric|min:0',
+            'max' => 'required|numeric|gt:min',
+        ], [
+            'max.gt' => 'Maximum price must be greater than minimum price.',
         ]);
 
         // Find an existing record by 'product_name' or create a new one
