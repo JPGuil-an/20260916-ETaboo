@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Http\Resources\CropRecordResource;
 use App\Http\Resources\SupportedProductResource;
 use App\Http\Resources\SupportedBarangayResource;
@@ -34,6 +35,42 @@ class SuperAdminController extends Controller
 
     public function getCropRecords(Request $request)
     {
+        $validated = $request->validate([
+            'commodity' => ['required', 'in:Brocollis,Carrots,Cabbages,Tomatoes'],
+            'start_date' => ['required', 'date', 'before_or_equal:today'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date', 'before_or_equal:today'],
+        ]);
+
+        $locations = Product::query()
+            ->where('product_type', $validated['commodity'])
+            ->whereBetween('harvested_date', [$validated['start_date'], $validated['end_date']])
+            ->get()
+            ->groupBy(function (Product $product) {
+                $location = trim(explode(',', $product->product_location)[0] ?? '');
+
+                return $location === '' ? 'Unknown' : Str::title(Str::lower($location));
+            })
+            ->map(function ($products, $location) {
+                return [
+                    'location' => $location,
+                    'sold_kg' => (float) $products->sum('actual_sold_kg'),
+                    'yield_kg' => (float) $products->sum('prospect_harvest_in_kg'),
+                ];
+            })
+            ->sortBy('location')
+            ->values();
+
+        return response()->json([
+            'commodity' => $validated['commodity'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'locations' => $locations,
+            'totals' => [
+                'sold_kg' => (float) $locations->sum('sold_kg'),
+                'yield_kg' => (float) $locations->sum('yield_kg'),
+            ],
+        ]);
+
         $capitanJuanSold = 0;
         $bugcaonSold = 0;
         $kulasihanSold = 0;
@@ -231,6 +268,11 @@ class SuperAdminController extends Controller
 
     public function generateReport(Request $request)
     {
+        $validated = $request->validate([
+            'product_type' => ['required', 'in:Brocollis,Carrots,Cabbages,Tomatoes'],
+            'starting_date' => ['required', 'date', 'before_or_equal:today'],
+            'end_date' => ['required', 'date', 'after_or_equal:starting_date', 'before_or_equal:today'],
+        ]);
 
         // $request->end_date
         // $request->product_type
@@ -241,17 +283,20 @@ class SuperAdminController extends Controller
         // ->with('user', 'TransactionDetail', 'TransactionDetail.productOrdered' => (query::where('product', '==' $request->product_type)))
         // ->get();
 
-        $transactions = Transaction::whereBetween('payed_on', [$request->starting_date, $request->end_date])
-    ->with([
-        'user',
-        'transactionDetail' => function ($query) use ($request) {
-            $query->whereHas('productOrdered', function ($subquery) use ($request) {
-                $subquery->where('product_type', $request->product_type);
-            });
-        },
-        'transactionDetail.productOrdered'
-    ])
-    ->get();
+        $transactions = Transaction::whereBetween('payed_on', [$validated['starting_date'], $validated['end_date']])
+            ->whereHas('transactionDetail.productOrdered', function ($query) use ($validated) {
+                $query->where('product_type', $validated['product_type']);
+            })
+            ->with([
+                'user',
+                'transactionDetail' => function ($query) use ($validated) {
+                    $query->whereHas('productOrdered', function ($subquery) use ($validated) {
+                        $subquery->where('product_type', $validated['product_type']);
+                    });
+                },
+                'transactionDetail.productOrdered'
+            ])
+            ->get();
 
         return response()->json($transactions);
 

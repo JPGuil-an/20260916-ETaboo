@@ -24,7 +24,6 @@ import Srp from "./views/Admin/Srp.jsx";
 import ProductFormManage from "./views/Admin/ProductFormManage.jsx";
 import ProductsApproved from "./views/Admin/ProductsApproved.jsx";
 
-import CropPredictiveAnalysis from "./views/Admin/CropPredictiveAnalysis.jsx";
 import BarangaySupported from "./views/Admin/BarangaySupported.jsx";
 import ProductsSupported from "./views/Admin/ProductsSupported.jsx";
 import BarangayUpdate from "./views/Admin/BarangayUpdate.jsx";
@@ -132,7 +131,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'admin/croprecords',
-        element: <CropPredictiveAnalysis />
+        element: <GenerateReport />
       },
       {
         path: 'admin/supported/barangay',

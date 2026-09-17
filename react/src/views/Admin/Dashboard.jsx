@@ -23,7 +23,7 @@ export default function Dashboard() {
   const metrics = [
     { label: "Active listings", value: number(summary.active_listings), note: `${number(summary.available_kg)} kg available`, tone: "green", to: "/admin/products/approved" },
     { label: "Marketplace sales", value: money(summary.sales), note: `${number(summary.orders)} total orders`, tone: "emerald", to: "/admin/report/generate" },
-    { label: "Produce sold", value: `${number(summary.sold_kg)} kg`, note: "Across approved listings", tone: "lime", to: "/admin/croprecords" },
+    { label: "Produce sold", value: `${number(summary.sold_kg)} kg`, note: "Across approved listings", tone: "lime", to: "/admin/report/generate" },
     { label: "Registered farms", value: number(summary.farms), note: `${number(users.userAll)} platform users`, tone: "teal", to: "/admin/farmers/profile" },
   ];
 

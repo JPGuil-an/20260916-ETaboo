@@ -8,10 +8,9 @@ const navItems = [
   { to: "/admin/products/srp", label: "Price Control", icon: "chart" },
   { to: "/admin/products/approved", label: "Products", icon: "bag" },
   { to: "/admin/farmers/profile", label: "Farmers", icon: "farm" },
-  { to: "/admin/croprecords", label: "Crop Records", icon: "chart" },
   { to: "/admin/supported/barangay", label: "Barangays", icon: "pin" },
   { to: "/admin/users/all", label: "Users", icon: "users" },
-  { to: "/admin/report/generate", label: "Reports", icon: "receipt" },
+  { to: "/admin/report/generate", label: "Reports & Analytics", icon: "receipt" },
 ];
 
 export default function AdminLayout() {
